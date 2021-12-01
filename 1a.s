@@ -114,7 +114,7 @@ _start:
 
   mov rax, 2 ; open inputFile
   ; mov rdi, rdi ; already have input file name
-  mov rsi, rdonly
+  mov rsi, O_RDONLY
   mov rdx, 0
   syscall
 
@@ -122,36 +122,24 @@ _start:
   mov rax, 5
   mov rsi, statBuf
   syscall
-  mov rdx, [statBuf + sizeOffset]
-  mov r12, rdi
+  mov rsi, [statBuf + sizeOffset] ; rsi = length of file
+  mov r12, rdi ; r12 = fd
 
-  mov rax, 12 ; save heap start in rbx
+  mov rax, 9 ; mmap the file
   mov rdi, 0
+  ; mov rsi, rsi ; already have size of file
+  mov rdx, PROT_READ
+  mov r10, MAP_PRIVATE
+  mov r8, r12
+  mov r9, 0
   syscall
-  mov rbx, rax
-
-  mov rax, 12 ; brk required space
-  lea rdi, [rbx + rdx]
-  syscall
-
-  mov rax, 0 ; read file
-  mov rdi, r12
-  mov rsi, rbx
-  ; mov rdx, rdx ; already have size in rdx
-  syscall
+  mov r13, rax ; r13 = start of file
 
   mov rax, 3 ; close file
   mov rdi, r12
   syscall
 
-  ; mov rax, 1 ; write file as a check
-  ; mov rdi, 1
-  ; mov rsi, rbx
-  ; ; mov rdx, rdx ; already have size in rdx
-  ; syscall
-
-  lea r12, [rbx + rdx] ; r12 = end of file
-  mov r13, rbx ; r13 = current position
+  lea r12, [r13 + rsi] ; r12 = end of file
 
   mov rdi, r13
   call findNewline
@@ -201,7 +189,9 @@ _start:
 section .rodata
 
 sizeOffset: equ 48
-rdonly: equ 0
+O_RDONLY: equ 0
+PROT_READ: equ 1
+MAP_PRIVATE: equ 2
 
 section .bss
 
