@@ -111,7 +111,42 @@ findNewline:
 
   ret
 
-section .rodata
+;; rdi = length to allocate
+;; returns pointer to allocation
+;; clobbers rsi, rdi
+global alloc:function
+alloc:
+  mov rsi, rdi
+
+  ; if old brk is not zero, skip getting it
+  cmp QWORD [oldBrk], 0
+  jne .haveBrk
+
+  mov rax, 12
+  mov rdi, 0
+  syscall
+  
+  jmp .gotBrk
+.haveBrk:
+
+  mov rax, [oldBrk]
+
+.gotBrk:
+
+  ; actually allocate
+  lea rdi, [rax + rsi] ; rdi = new brk
+  mov rsi, rax ; rsi = old brk
+  mov rax, 12
+  syscall
+
+  mov [oldBrk], rax ; save new brk
+
+  mov rax, rsi ; return rsi
+  ret
+
+section .data
+oldBrk:
+  dq 0
 
 section .bss
 
