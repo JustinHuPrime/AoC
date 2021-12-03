@@ -28,8 +28,35 @@ atol:
 
   ret
 
+;; rdi = start of string
+;; rsi = end of string
+;; returns integer value of string
+;; clobbers rdi, rdx
+global atolBinary:function
+atolBinary:
+  mov rax, 0 ; buffer = 0
+
+  ; while current < end
+.loop:
+  cmp rdi, rsi
+  jge .end
+
+  shl rax, 1 ; rax *= 2
+
+  mov dl, [rdi] ; rax += *current - '0'
+  sub dl, '0'
+  movzx rdx, dl
+  add rax, rdx
+
+  inc rdi ; ++current
+
+  jmp .loop
+.end:
+
+  ret
+
 ;; writeNewline:
-;; clobbers rax, rdi, rsi, rdx
+;; clobbers rax, rdi, rsi, rdx, r11, rcx
 global writeNewline:function
 writeNewline:
   mov BYTE [writeBuf], 0xa
@@ -43,7 +70,7 @@ writeNewline:
   ret
 
 ;; rdi = unsigned long to write
-;; clobbers rax, rdi, rsi, rdx
+;; clobbers rax, rdi, rsi, rdx, r11, rcx
 global writeLong:function
 writeLong:
   ; special case: rdi = 0
