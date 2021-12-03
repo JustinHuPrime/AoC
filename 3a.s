@@ -46,10 +46,9 @@ _start:
 .countBitLoop:
 
   mov sil, [r13] ; if character is 1 increment the count
-  cmp sil, '1'
-  jne .noIncrement
-  inc QWORD [oneCounts + (rcx * 8) - 1]
-.noIncrement:
+  sub sil, '0'
+  movzx rsi, sil
+  add [oneCounts + (rcx * 8) - 8], rsi
 
   inc r13 ; done with this character
 
@@ -62,12 +61,13 @@ _start:
 
   mov r15, 0 ; r15 = working number
 
-  mov rcx, 12 ; for each of the 12 bits
+  ; for each of the 12 bits
+  mov rcx, 12
 .sumBitLoop:
 
   shl r15, 1 ; shift left to make room for next bit
 
-  mov rsi, [oneCounts + (rcx * 8) - 1] ; if it's greater than 500, increment the last bit
+  mov rsi, [oneCounts + (rcx * 8) - 8] ; if it's greater than 500, increment the last bit
   lea r14, [r15 + 1]
   cmp rsi, 500
   cmovg r15, r14
