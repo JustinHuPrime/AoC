@@ -138,6 +138,66 @@ findNewline:
 
   ret
 
+;; rdi = start of string
+;; returns pointer to character
+;; doesn't clobber
+global findComma:function
+findComma:
+  mov rax, rdi
+
+  ; while *rax != ','
+.loop:
+  cmp BYTE [rax], ','
+  je .end
+
+  inc rax ; ++rax
+  
+  jmp .loop
+.end:
+
+  ret
+
+;; rdi = start of string
+;; returns pointer to character
+;; doesn't clobber
+global findWs:function
+findWs:
+  mov rax, rdi
+
+  ; while *rax != ' ' && *rax != '\n'
+.loop:
+  cmp BYTE [rax], ' '
+  je .end
+  cmp BYTE [rax], 0xa
+  je .end
+
+  inc rax ; ++rax
+  
+  jmp .loop
+.end:
+
+  ret
+
+;; rdi = current position in string
+;; returns pointer to character
+;; doesn't clobber
+global skipWs:function
+skipWs:
+  mov rax, rdi
+
+  ; while *rax == ' ' || *rax == '\n'
+.loop:
+  cmp BYTE [rax], ' '
+  je .continue
+  cmp BYTE [rax], 0xa
+  je .continue
+  ret
+
+.continue:
+  inc rax ; ++rax
+  
+  jmp .loop
+
 ;; rdi = length to allocate
 ;; returns pointer to allocation
 ;; clobbers rsi, rdi
