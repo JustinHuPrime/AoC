@@ -71,15 +71,12 @@ _start:
   loop .doGeneration
 
   mov rdi, 0
-  add rdi, [fish + (0 * 8)]
-  add rdi, [fish + (1 * 8)]
-  add rdi, [fish + (2 * 8)]
-  add rdi, [fish + (3 * 8)]
-  add rdi, [fish + (4 * 8)]
-  add rdi, [fish + (5 * 8)]
-  add rdi, [fish + (6 * 8)]
-  add rdi, [fish + (7 * 8)]
-  add rdi, [fish + (8 * 8)]
+  mov rcx, 9
+  mov rsi, fish
+.sumFish:
+  lodsq
+  add rdi, rax
+  loop .sumFish
   call writeLong
   call writeNewline
 
