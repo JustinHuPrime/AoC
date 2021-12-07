@@ -198,6 +198,26 @@ skipWs:
   
   jmp .loop
 
+;; rdi = start of string
+;; sil = character to find
+;; returns pointer to character
+;; doesn't clobber
+global findChar:function
+findChar:
+  mov rax, rdi
+
+  ; while *rax != sil
+.loop:
+  cmp BYTE [rax], sil
+  je .end
+
+  inc rax ; ++rax
+  
+  jmp .loop
+.end:
+
+  ret
+
 ;; rdi = length to allocate
 ;; returns pointer to allocation
 ;; clobbers rsi, rdi
