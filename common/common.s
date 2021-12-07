@@ -286,6 +286,52 @@ qsortLong:
 
   ret
 
+;; rdi = start of range to search
+;; rsi = end of range to search
+;; returns smallest element
+;; clobbers rax, rdi
+global minLong:function
+minLong:
+  mov rax, [rdi]
+
+.loop:
+  cmp [rdi], rax
+  jge .continue
+
+  mov rax, [rdi]
+
+.continue:
+
+  add rdi, 8
+
+  cmp rdi, rsi
+  jl .loop
+
+  ret
+
+;; rdi = start of range to search
+;; rsi = end of range to search
+;; returns smallest element
+;; clobbers rax, rdi
+global maxLong:function
+maxLong:
+  mov rax, [rdi]
+
+.loop:
+  cmp [rdi], rax
+  jle .continue
+
+  mov rax, [rdi]
+
+.continue:
+
+  add rdi, 8
+
+  cmp rdi, rsi
+  jl .loop
+
+  ret
+
 ;; rdi = length to allocate
 ;; returns pointer to allocation
 ;; clobbers rsi, rdi
