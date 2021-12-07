@@ -218,6 +218,74 @@ findChar:
 
   ret
 
+;; rdi = start of range to sort
+;; rsi = end of range to sort
+;; effect: sorts range
+;; clobbers rax, rdi, rsi, rdx
+global qsortLong:function
+qsortLong:
+
+  cmp rdi, rsi
+  je .end
+
+  ; stack slots:
+  ; rsp+16 = pivot position
+  ; rsp+8 = start of range
+  ; rsp+0 = end of range
+  sub rsp, 3*8
+
+  mov [rsp + 8], rdi
+  mov [rsp + 0], rsi
+
+  ; for each element in the range (at least one)
+  ; invariant: rdi = pivot address
+  ; invariant: rdx = pivot value
+  ; invariant: array looks like:
+  ; x, x, x, x, x, x, x ...
+  ; ^  ^  ^     ^
+  ; |  |  |     + rsi = current element
+  ; |  |  + rdi + 8 = greater than pivot
+  ; |  + rdi = spot for pivot
+  ; + rdi - 8 = less than pivot
+  mov rdx, [rdi]
+  mov rsi, rdi ; rsi = current node
+.loop:
+
+  cmp [rsi], rdx
+  jge .noSwap ; if not greater than pivot, don't do anything
+
+  mov rax, [rsi] ; insert rsi at current pivot position
+  mov [rdi], rax
+  
+  mov rax, [rdi + 8] ; move greater than pivot to current position
+  mov [rsi], rax
+
+  add rdi, 8 ; move pivot position
+
+.noSwap:
+  add rsi, 8
+
+  cmp rsi, [rsp + 0]
+  jl .loop
+
+  mov [rdi], rdx ; re-insert pivot
+  mov [rsp + 16], rdi ; save pivot position
+
+  mov rdi, [rsp + 8] ; rdi = start of range
+  mov rsi, [rsp + 16] ; rsi = pivot position
+  call qsortLong
+
+  mov rdi, [rsp + 16] ; rdi = one more than pivot position
+  add rdi, 8
+  mov rsi, [rsp + 0] ; rsi = end of range
+  call qsortLong
+
+  add rsp, 3*8
+
+.end:
+
+  ret
+
 ;; rdi = length to allocate
 ;; returns pointer to allocation
 ;; clobbers rsi, rdi
