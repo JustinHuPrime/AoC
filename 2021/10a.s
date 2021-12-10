@@ -30,6 +30,10 @@ _start:
   syscall
   mov r15, rax ; r15 = current position in file
 
+  mov rax, 3 ; close file
+  mov rdi, r12
+  syscall
+
   lea r12, [r15 + rsi] ; r12 = end position of file
 
   mov r14, parserStack ; r14 = next empty stack position
@@ -162,10 +166,6 @@ _start:
 
   cmp r15, r12
   jl .loop
-
-  mov rax, 3 ; close file
-  mov rdi, r12
-  syscall
 
   mov rdi, r13
   call writeLong
