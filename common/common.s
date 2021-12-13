@@ -334,7 +334,7 @@ maxLong:
 
 ;; rdi = length to allocate
 ;; returns pointer to allocation
-;; clobbers rsi, rdi
+;; clobbers rsi, rdi, r11, rcx
 global alloc:function
 alloc:
   mov rsi, rdi
