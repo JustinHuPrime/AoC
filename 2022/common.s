@@ -15,13 +15,13 @@ mmap:
 
   mov rdi, rax ; rdi = opened fd
   mov rax, 5 ; fstat
-  mov rsi, statBuffer
+  mov rsi, statbuf
   syscall
 
   mov rax, 9 ; mmap
   mov r8, rdi ; r8 = opened fd
   mov rdi, 0 ; allocate a new address
-  mov rsi, [statBuffer + 48] ; rsi = size of file (48 = offset into stat buffer of st_size)
+  mov rsi, [statbuf + 48] ; rsi = size of file (48 = offset into stat buffer of st_size)
   mov rdx, 3 ; prot = PROT_READ | PROT_WRITE
   mov r10, 2 ; flags = MAP_PRIVATE
   mov r9, 0 ; no offset
@@ -245,7 +245,7 @@ qsort:
 
   add rdi, 8 ; move pivot position
 
-.continue
+.continue:
   add rsi, 8
 
   cmp rsi, [rsp + 0]
@@ -256,12 +256,12 @@ qsort:
 
   mov rdi, [rsp + 8] ; rdi = start of range
   mov rsi, [rsp + 16] ; rsi = pivot position
-  call qsortLong
+  call qsort
 
   mov rdi, [rsp + 16] ; rdi = one more than pivot position
   add rdi, 8
   mov rsi, [rsp + 0] ; rsi = end of range
-  call qsortLong
+  call qsort
 
   add rsp, 3*8
 
@@ -306,4 +306,4 @@ maxlong:
 
 section .bss
 
-statBuffer: resb 144
+statbuf: resb 144
