@@ -304,6 +304,49 @@ maxlong:
 
   ret
 
+;; rdi = length to allocate
+;; returns pointer to allocation
+global alloc:function
+alloc:
+  mov rsi, rdi
+  ; pad rdi out to the nearest 16 bytes
+  test rsi, 0xf
+  jz .nopad
+
+  and rsi, ~0xf
+  add rsi, 16
+
+.nopad:
+  cmp QWORD [oldbrk], 0
+  jne .havebrk
+
+  mov rax, 12 ; brk
+  mov rdi, 0 ; impossible value
+  syscall
+
+  jmp .gotbrk
+
+.havebrk:
+
+  mov rax, [oldbrk]
+
+.gotbrk:
+
+  ; actually allocate
+  lea rdi, [rax + rsi] ; rdi = old brk + length to allocate
+  mov rsi, rax ; rsi = old brk
+  mov rax, 12 ; brk
+  syscall
+
+  mov [oldbrk], rax ; save new brk
+
+  mov rax, rsi ; return rsi (old brk)
+  ret
+
+section .data
+oldbrk:
+  dq 0
+
 section .bss
 
 statbuf: resb 144
