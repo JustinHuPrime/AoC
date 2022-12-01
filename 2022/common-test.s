@@ -1,11 +1,11 @@
 section .text
 
-extern writeLong, exit, newline
+extern putlong, exit, newline
 
 global _start:function
 _start:
   mov rdi, 902347590
-  call writeLong
+  call putlong
 
   call newline
 

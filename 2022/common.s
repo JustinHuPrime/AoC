@@ -82,8 +82,8 @@ newline:
 
 ;; rdi = unsigned long to write
 ;; returns void
-global writeLong:function
-writeLong:
+global putlong:function
+putlong:
   ; special case: rdi = 0
   test rdi, rdi
   jnz .continue
