@@ -268,6 +268,42 @@ qsort:
 .end:
   ret
 
+;; rdi = start of range to search
+;; rsi = end of range to search
+;; returns smallest element
+global minlong:function
+minlong:
+  mov rax, [rdi] ; rax = smallest element
+
+  ; do while rdi < rsi
+.loop:
+  mov rdx, [rdi] ; rdx = element value
+  cmp rdx, rax ; if element < rax, rax = element
+  cmovl rax, rdx
+  
+  cmp rdi, rsi
+  jl .loop
+
+  ret
+
+;; rdi = start of range to search
+;; rsi = end of range to search
+;; returns largest element
+global maxlong:function
+maxlong:
+  mov rax, [rdi] ; rax = smallest element
+
+  ; do while rdi < rsi
+.loop:
+  mov rdx, [rdi] ; rdx = element value
+  cmp rdx, rax ; if element > rax, rax = element
+  cmovg rax, rdx
+  
+  cmp rdi, rsi
+  jl .loop
+
+  ret
+
 section .bss
 
 statBuffer: resb 144
