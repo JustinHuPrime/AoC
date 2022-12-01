@@ -128,6 +128,39 @@ putlong:
 
   ret
 
+;; rdi = start of string
+;; sil = character to search for
+;; returns pointer to found character
+global findc:function
+findc:
+  mov rax, rdi
+
+  ; while *rax != sil
+.loop:
+  cmp [rax], sil
+  je .end
+
+  inc rax ; ++rax
+
+  jmp .loop
+.end:
+
+  ret
+
+;; rdi = start of string
+;; returns pointer to found newline
+global findnl:function
+findnl:
+  mov sil, 0xa
+  jmp findc
+
+;; rdi = start of string
+;; returns pointer to found comma
+global findcomma:function
+findcomma:
+  mov sil, ','
+  jmp findc
+
 section .bss
 
 statBuffer: resb 144
