@@ -161,6 +161,46 @@ findcomma:
   mov sil, ','
   jmp findc
 
+;; rdi = start of string
+;; returns pointer to found whitespace
+global findws:function
+findws:
+  mov rax, rdi
+
+  ; while *rax != ' ' && *rax != '\n'
+.loop:
+  cmp BYTE [rax], ' '
+  je .end
+  cmp BYTE [rax], 0xa
+  je .end
+
+  inc rax ; ++rax
+
+  jmp .loop
+.end:
+
+  ret
+
+;; rdi = start of string
+;; returns pointer to character after whitespace
+global skipws:function
+skipws:
+  mov rax, rdi
+
+  ; while *rax == ' ' || *rax == '\n'
+.loop:
+  cmp BYTE [rax], ' '
+  je .continue
+  cmp BYTE [rax], 0xa
+  je .continue
+
+  ret
+
+.continue:
+  inc rax
+
+  jmp .loop
+
 section .bss
 
 statBuffer: resb 144
