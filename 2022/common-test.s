@@ -1,17 +1,13 @@
 section .text
 
-extern mmap, exit
+extern writeLong, exit, newline
 
 global _start:function
 _start:
-  mov rdi, [rsp + 16] ; get argv[0]
-  call mmap
+  mov rdi, 902347590
+  call writeLong
 
-  mov rsi, rax ; part to print
-  mov rax, 1
-  mov rdi, 1
-  ; mov rdx, rdx
-  syscall
+  call newline
 
-  mov dil, 0
+  mov dil, al
   call exit

@@ -39,6 +39,88 @@ exit:
   ; movzx rdi, dil ; truncated anyways
   syscall
 
+;; rdi = start of string
+;; rsi = end of string
+;; returns integer value of string
+global atol:function
+atol:
+  mov rax, 0
+  mov rdx, 10
+
+  ; while rdi < rsi
+.loop:
+  cmp rdi, rsi
+  jge .end
+
+  imul rax, rdx ; rax *= 10
+
+  mov cl, [rdi] ; rax += *current - 0
+  sub cl, '0'
+  movzx rcx, cl
+  add rax, rcx
+
+  inc rdi ; ++current
+
+  jmp .loop
+.end:
+
+  ret
+
+;; no arguments
+;; returns void
+global newline:function
+newline:
+  mov BYTE [rsp - 1], 0xa
+
+  mov rax, 1 ; write
+  mov rdi, 1 ; to stdout
+  lea rsi, [rsp - 1] ; from red zone buffer
+  mov rdx, 1 ; one byte
+  syscall
+
+  ret
+
+;; rdi = unsigned long to write
+;; returns void
+global writeLong:function
+writeLong:
+  ; special case: rdi = 0
+  test rdi, rdi
+  jnz .continue
+
+  lea rdi, [rsp - 1]
+  mov BYTE [rdi], '0'
+  jmp .end
+
+.continue:
+  mov rax, rdi ; rax = number to write
+  mov rdi, rsp ; rdi = start of string (in red zone)
+  mov rsi, 10 ; rsi = const 10
+  ; while rax != 0
+.loop:
+  test rax, rax
+  jz .end
+
+  dec rdi ; move one character further into red zone
+  
+  mov rdx, 0
+  div rsi ; rax = quotient, rdx = remainder
+  add dl, '0' ; dl = converted remainder
+
+  mov [rdi], dl
+
+  jmp .loop
+.end:
+
+  mov rax, 1 ; write
+  mov rsi, rdi ; start from write buffer
+  mov rdi, 1 ; to stdout
+  mov rdx, rsp ; length = buffer end - current
+  sub rdx, rsi
+  syscall
+
+  ret
+
 section .bss
 
 statBuffer: resb 144
