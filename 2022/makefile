@@ -15,9 +15,6 @@ run-%b: %b %.txt
 %.o: %.s
 	nasm -f elf64 $^
 
-%.txt:
-	curl -s --cookie $(shell cat ../TOKEN) https://adventofcode.com/2022/day/%/input > $@
-
 %a: %a.o common.o
 	ld -o $@ $^
 
