@@ -53,5 +53,3 @@ _start:
 
   mov dil, 0
   call exit
-
-global countnewlines:function
