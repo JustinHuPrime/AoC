@@ -66,11 +66,11 @@ atol:
 
   ret
 
-;; no arguments
+;; dil = character to print
 ;; returns void
-global newline:function
-newline:
-  mov BYTE [rsp - 1], 0xa
+global putc:function
+putc:
+  mov [rsp - 1], dil
 
   mov rax, 1 ; write
   mov rdi, 1 ; to stdout
@@ -79,6 +79,13 @@ newline:
   syscall
 
   ret
+
+;; no arguments
+;; returns void
+global newline:function
+newline:
+  mov dil, 0xa
+  jmp putc
 
 ;; rdi = unsigned long to write
 ;; returns void

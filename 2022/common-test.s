@@ -9,5 +9,5 @@ _start:
 
   call newline
 
-  mov dil, al
+  mov dil, 0
   call exit
