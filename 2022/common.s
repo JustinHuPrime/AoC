@@ -201,6 +201,27 @@ skipws:
 
   jmp .loop
 
+;; rdi = start of string
+;; rsi = end of string
+;; dl = character to search for
+;; returns count of characters found
+global countc:function
+countc:
+  mov rax, 0
+
+  ; do while rdi != rsi
+.loop:
+  lea rcx, [rax + 1]
+  cmp BYTE [rdi], dl
+  cmove rax, rcx
+
+  inc rdi
+
+  cmp rdi, rsi
+  jl .loop
+
+  ret
+
 ;; rdi = start of range to sort
 ;; rsi = end of range to sort
 ;; effect: sorts range
@@ -280,7 +301,29 @@ minlong:
   mov rdx, [rdi] ; rdx = element value
   cmp rdx, rax ; if element < rax, rax = element
   cmovl rax, rdx
+
+  add rdi, 8
   
+  cmp rdi, rsi
+  jl .loop
+
+  ret
+
+;; rdi = start of range to search
+;; rsi = end of range to search
+;; returns address of smallest element
+global argminlong:function
+argminlong:
+  mov rax, rdi ; rax = address of smallest element
+
+  ; do while rdi < rsi
+.loop:
+  mov rdx, [rdi]
+  cmp rdx, [rax] ; if element < rax, rax = &element
+  cmovl rax, rdi
+
+  add rdi, 8
+
   cmp rdi, rsi
   jl .loop
 
@@ -298,7 +341,29 @@ maxlong:
   mov rdx, [rdi] ; rdx = element value
   cmp rdx, rax ; if element > rax, rax = element
   cmovg rax, rdx
+
+  add rdi, 8
   
+  cmp rdi, rsi
+  jl .loop
+
+  ret
+
+;; rdi = start of range to search
+;; rsi = end of range to search
+;; returns address of smallest element
+global argmaxlong:function
+argmaxlong:
+  mov rax, rdi ; rax = address of smallest element
+
+  ; do while rdi < rsi
+.loop:
+  mov rdx, [rdi]
+  cmp rdx, [rax] ; if element > rax, rax = &element
+  cmovg rax, rdi
+
+  add rdi, 8
+
   cmp rdi, rsi
   jl .loop
 
