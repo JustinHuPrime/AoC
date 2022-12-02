@@ -20,3 +20,6 @@ run-%b: %b %.txt
 
 %b: %b.o common.o
 	ld -o $@ $^
+
+%.txt:
+	curl -s --cookie $(shell cat ../TOKEN) --user-agent "Justin Hu <justin.hu@alumni.ubc.ca> via curl" https://adventofcode.com/2022/day/$*/input > $@
