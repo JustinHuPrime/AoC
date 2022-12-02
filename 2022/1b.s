@@ -70,6 +70,32 @@ _start:
   cmp r12, r13
   jl .loop
 
+  ; deal with last elf
+  cmp r14, rbx ; if current > most, most = current, current = old most
+  jle .lastsecond
+
+  mov rax, rbx
+  mov rbx, r14
+  mov r14, rax
+
+.lastsecond:
+  cmp r14, rbp ; if current > second-most, second-most = current
+  jle .lastthird
+
+  mov rax, rbp
+  mov rbp, r14
+  mov r14, rax
+
+.lastthird:
+  cmp r14, r15 ; else if current > third-most, third-most = current
+  jle .lastnext
+
+  mov rax, r15
+  mov r15, r14
+  mov r14, rax
+
+.lastnext:
+
   mov rdi, rbx
   add rdi, rbp
   add rdi, r15

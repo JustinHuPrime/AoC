@@ -47,6 +47,9 @@ _start:
   cmp r12, r13
   jl .loop
 
+  cmp r14, rbx ; deal with last elf
+  cmovg rbx, r14
+
   mov rdi, rbx
   call putlong
   call newline
