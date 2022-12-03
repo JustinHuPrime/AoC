@@ -148,6 +148,30 @@ findc:
   ret
 
 ;; rdi = start of string
+;; rsi = end of string
+;; dl = character to search for
+;; returns pointer to found character or end of string if not found
+;; noclobber
+global searchc:function
+searchc:
+  mov rax, rdi
+
+  ; while rax < rsi
+.loop:
+  cmp rax, rsi
+  jge .end
+
+  cmp [rax], dl
+  je .end
+
+  inc rax
+
+  jmp .loop
+.end:
+
+  ret
+
+;; rdi = start of string
 ;; returns pointer to found newline
 global findnl:function
 findnl:
