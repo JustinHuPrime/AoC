@@ -42,6 +42,7 @@ exit:
 ;; rdi = start of string
 ;; rsi = end of string
 ;; returns integer value of string
+;; clobbers rdi, rax, rdx, rcx
 global atol:function
 atol:
   mov rax, 0
@@ -131,6 +132,7 @@ putlong:
 ;; rdi = start of string
 ;; sil = character to search for
 ;; returns pointer to found character
+;; noclobber
 global findc:function
 findc:
   mov rax, rdi
