@@ -61,6 +61,7 @@ _start:
 
   cmp r8, r10
   cmove r14, r15
+  je .continue
   jg .more
 
   ; if r8 < r10 and r11 <= r9, increment
