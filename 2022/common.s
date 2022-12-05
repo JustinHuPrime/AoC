@@ -181,6 +181,13 @@ findnl:
   jmp findc
 
 ;; rdi = start of string
+;; returns pointer to found space
+global findspace:function
+findspace:
+  mov sil, ' '
+  jmp findc
+
+;; rdi = start of string
 ;; returns pointer to found comma
 global findcomma:function
 findcomma:
@@ -189,6 +196,7 @@ findcomma:
 
 ;; rdi = start of string
 ;; returns pointer to found whitespace
+;; noclobber
 global findws:function
 findws:
   mov rax, rdi
