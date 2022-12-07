@@ -81,6 +81,33 @@ putc:
 
   ret
 
+;; rdi = character string to print
+;; returns void
+global puts:function
+puts:
+  mov rax, rdi
+  mov rdx, 0
+
+  ; get length of string
+  ; while *rax != 0
+.loop:
+  cmp BYTE [rax], 0
+  je .endLoop
+
+  inc rax
+  inc rdx
+
+  jmp .loop
+.endLoop:
+
+  mov rax, 1 ; write
+  mov rsi, rdi ; frmo given string
+  mov rdi, 1 ; to stdout
+  ; mov rdx, rdx ; with length gotten above
+  syscall
+
+  ret
+
 ;; no arguments
 ;; returns void
 global newline:function
@@ -405,6 +432,7 @@ argmaxlong:
 
 ;; rdi = length to allocate
 ;; returns pointer to allocation
+;; clobbers rsi, rdi, rcx, r11
 global alloc:function
 alloc:
   mov rsi, rdi
