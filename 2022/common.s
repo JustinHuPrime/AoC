@@ -156,6 +156,64 @@ putlong:
 
   ret
 
+;; rdi = signed long to write
+;; returns void
+global putslong:function
+putslong:
+  ; special case: rdi = 0
+  test rdi, rdi
+  jnz .continue
+
+  lea rdi, [rsp - 1]
+  mov BYTE [rdi], '0'
+  jmp .write
+
+.continue:
+
+  mov r11, 0 ; r11 = sign flag
+  mov rax, rdi ; rax = number to write
+  mov rdi, rsp ; rdi = start of string (in red zone)
+  test rax, rax
+  jns .alreadyPositive
+
+  neg rax
+  mov r11, 1
+
+.alreadyPositive:
+  mov rsi, 10 ; rsi = const 10
+  ; while rax != 0
+.loop:
+  test rax, rax
+  jz .end
+
+  dec rdi ; move one character further into red zone
+  
+  mov rdx, 0
+  div rsi ; rax = quotient, rdx = remainder
+  add dl, '0' ; dl = converted remainder
+
+  mov [rdi], dl
+
+  jmp .loop
+.end:
+
+  test r11, r11
+  jz .write
+
+  dec rdi
+  mov BYTE [rdi], '-'
+
+.write:
+
+  mov rax, 1 ; write
+  mov rsi, rdi ; start from write buffer
+  mov rdi, 1 ; to stdout
+  mov rdx, rsp ; length = buffer end - current
+  sub rdx, rsi
+  syscall
+
+  ret
+
 ;; rdi = start of string
 ;; sil = character to search for
 ;; returns pointer to found character
