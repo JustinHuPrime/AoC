@@ -564,10 +564,7 @@ findnotnum:
 
   ret
 
-section .data
-oldbrk:
-  dq 0
-
 section .bss
 
 statbuf: resb 144
+oldbrk: resq 1
