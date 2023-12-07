@@ -470,10 +470,10 @@ maxlong:
 
 ;; rdi = start of range to search
 ;; rsi = end of range to search
-;; returns address of smallest element
+;; returns address of largest element
 global argmaxlong:function
 argmaxlong:
-  mov rax, rdi ; rax = address of smallest element
+  mov rax, rdi ; rax = address of largest element
 
   ; do while rdi < rsi
 .loop:
