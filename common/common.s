@@ -564,8 +564,8 @@ findnotnum:
 
   ret
 
-;; rdi = first number
-;; rsi = second number
+;; rdi = first number (unsigned)
+;; rsi = second number (unsigned)
 ;; computes LCM
 global lcm:function
 lcm:
@@ -579,7 +579,7 @@ lcm:
 .noSwap:
 
   mov rax, rdi
-  cqo
+  mov rdx, 0
   mul rsi
 
   push rdx
@@ -596,8 +596,8 @@ lcm:
 
   ret
 
-;; rdi = first number
-;; rsi = second number, must be <= first number
+;; rdi = first number (unsigned)
+;; rsi = second number (unsigned), must be <= first number
 ;; computes GCD
 global gcd:function
 gcd:
@@ -609,7 +609,7 @@ gcd:
 
 .else:
   mov rax, rdi
-  cqo
+  mov rdx, 0
   div rsi
   mov rdi, rsi
   mov rsi, rdx
