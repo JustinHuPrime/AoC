@@ -564,6 +564,57 @@ findnotnum:
 
   ret
 
+;; rdi = first number
+;; rsi = second number
+;; computes LCM
+global lcm:function
+lcm:
+  cmp rdi, rsi
+  jge .noSwap
+  
+  mov rax, rdi
+  mov rdi, rsi
+  mov rsi, rax
+
+.noSwap:
+
+  mov rax, rdi
+  cqo
+  mul rsi
+
+  push rdx
+  push rax
+
+  call gcd
+
+  mov rdi, rax
+
+  pop rax
+  pop rdx
+
+  div rdi
+
+  ret
+
+;; rdi = first number
+;; rsi = second number, must be <= first number
+;; computes GCD
+global gcd:function
+gcd:
+  test rsi, rsi
+  jnz .else
+
+  mov rax, rdi
+  ret
+
+.else:
+  mov rax, rdi
+  cqo
+  div rsi
+  mov rdi, rsi
+  mov rsi, rdx
+  jmp gcd
+
 section .bss
 
 statbuf: resb 144
