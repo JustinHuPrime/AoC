@@ -67,6 +67,24 @@ atol:
 
   ret
 
+;; rdi = start of string
+;; rsi = end of string
+;; returns integer value of string
+;; clobbers rdi, rax, rdx, rcx
+global atosl:function
+atosl:
+  cmp BYTE [rdi], '-'
+  jne .notNegative
+
+  inc rdi
+  call atol
+  neg rax
+  ret
+
+.notNegative:
+  jmp atol
+
+
 ;; dil = character to print
 ;; returns void
 global putc:function
