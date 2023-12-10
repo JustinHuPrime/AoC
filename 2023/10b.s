@@ -23,6 +23,7 @@ section .text
 %define startX [rsp + 0]
 %define startY [rsp + 8]
 %define accumulator r15
+%define isInside r14b
 
 global _start:function
 _start:
@@ -281,169 +282,48 @@ _start:
   test todoHead, todoHead
   jnz .traverseLoop
 
-  ; flood fill map of outside cells
-
-  mov rdi, TODO_ENTRY
-  call alloc
-  mov todoHead, rax
-  mov todoTail, rax
-
-  mov rax, startX
-  mov [todoHead + 0], rax
-  mov rax, startY
-  mov [todoHead + 8], rax
-  mov QWORD [todoHead + 16], 0
-
-  ; do-while todoHead != null
-.markOutsideLoop:
-
-  ; extract entry
-  mov x, [todoHead + 0]
-  mov y, [todoHead + 8]
-
-  ; is this a valid cell
-  test QWORD [map + x + y], VALID
-  jz .continueMarkLoop ; skip if not valid
-
-  ; consider cell to visit - have we been here before
-  test QWORD [map + x + y], OUTSIDE
-  jnz .continueMarkLoop ; skip if so
-
-  ; mark as visited
-  or QWORD [map + x + y], OUTSIDE
-
-  ; add neighbours
-
-  ; is this a vert?
-  cmp QWORD [map + x + y], VISITED | NORTH | SOUTH
-  jne .markOutsideNotVert
-
-  ; only add north and south neighbours to list
-  ; add northern neighbour
-  mov rdi, TODO_ENTRY
-  call alloc
-  mov [todoTail + 16], rax
-  mov todoTail, rax
-  mov [todoTail + 0], x
-  mov [todoTail + 8], y
-  sub QWORD [todoTail + 8], ROW
-  mov QWORD [todoTail + 16], 0
-  ; add southern neighbour
-  mov rdi, TODO_ENTRY
-  call alloc
-  mov [todoTail + 16], rax
-  mov todoTail, rax
-  mov [todoTail + 0], x
-  mov [todoTail + 8], y
-  add QWORD [todoTail + 8], ROW
-  mov QWORD [todoTail + 16], 0
-
-  jmp .continueMarkLoop
-.markOutsideNotVert:
-
-  ; is this a dash?
-  cmp QWORD [map + x + y], VISITED | EAST | WEST
-  jne .markOutsideNotDash
-
-  ; only add east and west neighbours to list
-  ; add eastern neighbour
-  mov rdi, TODO_ENTRY
-  call alloc
-  mov [todoTail + 16], rax
-  mov todoTail, rax
-  mov [todoTail + 0], x
-  add QWORD [todoTail + 0], CELL
-  mov [todoTail + 8], y
-  mov QWORD [todoTail + 16], 0
-  ; add western neighbour
-  mov rdi, TODO_ENTRY
-  call alloc
-  mov [todoTail + 16], rax
-  mov todoTail, rax
-  mov [todoTail + 0], x
-  sub QWORD [todoTail + 0], CELL
-  mov [todoTail + 8], y
-  mov QWORD [todoTail + 16], 0
-
-  jmp .continueMarkLoop
-.markOutsideNotDash:
-
-  ; add all neighbours to list
-  ; add northern neighbour
-  mov rdi, TODO_ENTRY
-  call alloc
-  mov [todoTail + 16], rax
-  mov todoTail, rax
-  mov [todoTail + 0], x
-  mov [todoTail + 8], y
-  sub QWORD [todoTail + 8], ROW
-  mov QWORD [todoTail + 16], 0
-  ; add southern neighbour
-  mov rdi, TODO_ENTRY
-  call alloc
-  mov [todoTail + 16], rax
-  mov todoTail, rax
-  mov [todoTail + 0], x
-  mov [todoTail + 8], y
-  add QWORD [todoTail + 8], ROW
-  mov QWORD [todoTail + 16], 0
-  ; add eastern neighbour
-  mov rdi, TODO_ENTRY
-  call alloc
-  mov [todoTail + 16], rax
-  mov todoTail, rax
-  mov [todoTail + 0], x
-  add QWORD [todoTail + 0], CELL
-  mov [todoTail + 8], y
-  mov QWORD [todoTail + 16], 0
-  ; add western neighbour
-  mov rdi, TODO_ENTRY
-  call alloc
-  mov [todoTail + 16], rax
-  mov todoTail, rax
-  mov [todoTail + 0], x
-  sub QWORD [todoTail + 0], CELL
-  mov [todoTail + 8], y
-  mov QWORD [todoTail + 16], 0
-
-.continueMarkLoop:
-
-  mov todoHead, [todoHead + 16]
-
-  test todoHead, todoHead
-  jnz .markOutsideLoop
-
-  ; count number of cells that are VALID and not OUTSIDE
+  ; count number of inside cells
   mov x, CELL
   mov y, ROW
   mov accumulator, 0
-.countLoop:
 
-  ; consider current cell
+  ; for each row
+.countRowLoop:
+
+  mov isInside, 0
+
+  ; for each cell
+.countCellLoop:
+
+  ; if current cell is part of the loop and goes north, flip isInside
+  test QWORD [map + x + y], VISITED
+  jz .countCellNotVisited
+  test QWORD [map + x + y], NORTH
+  jz .continueCountCellLoop
+
+  not isInside
+
+  jmp .continueCountCellLoop
+.countCellNotVisited:
+
+  ; if current cell is not part of the loop, and isInside, increment accumulator
+  test isInside, isInside
+  jz .continueCountCellLoop
+
+  inc accumulator
+
+.continueCountCellLoop:
+
+  add x, CELL
+
   test QWORD [map + x + y], VALID
-  jnz .countIsValid
+  jnz .countCellLoop
 
-  ; end of row
   mov x, CELL
   add y, ROW
 
   test QWORD [map + x + y], VALID
-  jz .endCountLoop
-  jmp .countLoop
-
-.countIsValid:
-
-  test QWORD [map + x + y], OUTSIDE
-  jnz .continueCountLoop
-
-  inc accumulator
-
-.continueCountLoop:
-
-  add x, CELL
-
-  jmp .countLoop
-.endCountLoop:
+  jnz .countRowLoop
 
   mov rdi, accumulator
   call putlong
@@ -459,7 +339,6 @@ section .bss
 ;; }
 map: resq CELL * (SIZE + 2) * (SIZE + 2)
 ;; struct TodoEntry {
-;;   qword distance;
 ;;   qword x;
 ;;   qword y;
 ;;   qword nextEntry;
