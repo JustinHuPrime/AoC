@@ -633,6 +633,34 @@ gcd:
   mov rsi, rdx
   jmp gcd
 
+;; rdi = pointer to first string (zero-terminated)
+;; rsi = pointer to second string (zero-terminated)
+;; clobbers rdi, rsi, rdx
+;; compares two strings, returns 1 if equal, 0 if not equal
+global streq:function
+streq:
+  mov al, [rdi]
+  or al, [rsi]
+  test al, al
+  jz .equal
+
+  mov al, [rdi]
+  mov dl, [rsi]
+  cmp al, dl
+  jnz .unequal
+
+  inc rdi
+  inc rsi
+  jmp streq
+
+.equal:
+  mov al, 1
+  ret
+
+.unequal:
+  mov al, 0
+  ret
+
 section .bss
 
 statbuf: resb 144
