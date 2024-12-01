@@ -365,7 +365,7 @@ countc:
 ;; returns void
 global qsort:function
 qsort:
-  ; if range is one item, return
+  ; if range is empty, return
   cmp rdi, rsi
   je .end
 
