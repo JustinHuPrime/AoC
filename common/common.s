@@ -119,7 +119,7 @@ puts:
 .endLoop:
 
   mov rax, 1 ; write
-  mov rsi, rdi ; frmo given string
+  mov rsi, rdi ; from given string
   mov rdi, 1 ; to stdout
   ; mov rdx, rdx ; with length gotten above
   syscall
