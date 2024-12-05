@@ -426,6 +426,89 @@ qsort:
 .end:
   ret
 
+;; rdi = start of range to sort
+;; rsi = end of range to sort
+;; rdx = function pointer to comparison function
+;; effect: sorts range
+;; returns void
+global qsortby:function
+qsortby:
+  ; if range is empty, return
+  cmp rdi, rsi
+  je .end
+
+  ; stack slots:
+  ; rsp+16 = pivot position
+  ; rsp+8 = start of range
+  ; rsp+0 = end of range
+  sub rsp, 3*8
+
+  mov [rsp + 0], rsi
+  mov [rsp + 8], rdi
+
+  ; for each element in the range (at least one)
+  ; invariant: rdi = pivot address
+  ; invariant: rcx = pivot value
+  ; invariant: array looks like:
+  ; x, x ... x, x, x ...
+  ; ^  ^     ^
+  ; |  |     + rsi = current element
+  ; |  + rdi + 8 = greater than pivot
+  ; + rdi = spot for pivot; value undefined
+  mov rcx, [rdi]
+  mov rsi, rdi ; rsi = current element
+  ; do while rsi < end
+.loop:
+
+  ; save registers and call comparison function
+  push rdi
+  push rsi
+  push rcx
+  push rdx
+
+  mov rdi, [rsi]
+  mov rsi, rcx
+  call rdx
+
+  pop rdx
+  pop rcx
+  pop rsi
+  pop rdi
+
+  cmp rax, 0
+  jge .continue ; not less than pivot and after pivot; do nothing
+
+  mov rax, [rsi] ; insert rsi at current pivot position
+  mov [rdi], rax
+  
+  mov rax, [rdi + 8] ; move greater than pivot to current position
+  mov [rsi], rax
+
+  add rdi, 8 ; move pivot position
+
+.continue:
+  add rsi, 8
+
+  cmp rsi, [rsp + 0]
+  jl .loop
+
+  mov [rdi], rcx ; re-insert pivot
+  mov [rsp + 16], rdi ; save pivot position
+
+  mov rdi, [rsp + 8] ; rdi = start of range
+  mov rsi, [rsp + 16] ; rsi = pivot position
+  call qsortby
+
+  mov rdi, [rsp + 16] ; rdi = one more than pivot position
+  add rdi, 8
+  mov rsi, [rsp + 0] ; rsi = end of range
+  call qsortby
+
+  add rsp, 3*8
+
+.end:
+  ret
+
 ;; rdi = start of range to search
 ;; rsi = end of range to search
 ;; returns smallest element
