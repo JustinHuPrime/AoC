@@ -4,3 +4,4 @@
 !*.fish
 !README.md
 !.gitignore
+!makefile
