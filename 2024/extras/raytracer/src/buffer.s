@@ -3,43 +3,41 @@
 
 %use fp
 
-extern alloc
-
 section .text
 
 ;; initializes frame buffer
-global fbinit:function
-fbinit:
-  mov QWORD [framebufferEnd], framebuffer + framebufferHeaderEnd - framebufferHeader
+global fb_init:function
+fb_init:
+  mov QWORD [framebuffer_end], framebuffer + framebuffer_header.end - framebuffer_header
   mov rdi, framebuffer
-  mov rsi, framebufferHeader
-  mov rcx, framebufferHeaderEnd - framebufferHeader
+  mov rsi, framebuffer_header
+  mov rcx, framebuffer_header.end - framebuffer_header
   rep movsb
 
-  mov rax, framename + 7
-.incrementNameLoop:
+  mov rax, frame_name + 7
+.increment_name_loop:
   inc BYTE [rax]
 
   cmp BYTE [rax], `9`
-  jb .endIncrementNameLoop
+  jb .end_increment_name_loop
 
   mov BYTE [rax], `0`
   dec rax
 
-  jmp .incrementNameLoop
-.endIncrementNameLoop:
+  jmp .increment_name_loop
+.end_increment_name_loop:
 
   ret
 
 ;; writes frame buffer to file
-global fbwrite:function
-fbwrite:
+global fb_write:function
+fb_write:
   sub rsp, 1 * 8
   ;; slots
   ;; rsp + 0 = fd
 
   mov rax, 2 ; open
-  mov rdi, framename
+  mov rdi, frame_name
   mov rsi, 0o1 | 0o100 | 0o1000 ; O_WRONLY | O_CREAT | O_TRUNC
   mov rdx, 0o664 ; u+rw g+rw o+r
   syscall
@@ -48,7 +46,7 @@ fbwrite:
   mov rax, 1 ; write
   mov rdi, [rsp + 0]
   mov rsi, framebuffer
-  mov rdx, [framebufferEnd]
+  mov rdx, [framebuffer_end]
   sub rdx, framebuffer
   syscall
 
@@ -64,54 +62,55 @@ fbwrite:
 ;;   where r = low order double
 ;;         b = second-high order double
 ;;         ? = high order double (ignored)
-global fbpixel:function
-fbpixel:
+global fb_pixel:function
+fb_pixel:
   sub rsp, 1 * 16
   ;; slots
   ;; rsp + 0 = unpacking buffer
 
-  vbroadcastsd ymm1, [convertToByte]
+  vbroadcastsd ymm1, [convert_to_byte]
   vmulpd ymm0, ymm0, ymm1
+  vroundpd ymm0, ymm0, 0x3
   vcvtpd2dq xmm0, ymm0
   movdqu [rsp + 0], xmm0 ; put into unpacking buffer
 
   mov dil, [rsp + 0]
-  call fbpixelcomponent
+  call fb_pixel_component
 
-  mov rax, [framebufferEnd]
+  mov rax, [framebuffer_end]
   mov BYTE [rax], ' '
-  inc QWORD [framebufferEnd]
+  inc QWORD [framebuffer_end]
 
   mov dil, [rsp + 4]
-  call fbpixelcomponent
+  call fb_pixel_component
 
-  mov rax, [framebufferEnd]
+  mov rax, [framebuffer_end]
   mov BYTE [rax], ' '
-  inc QWORD [framebufferEnd]
+  inc QWORD [framebuffer_end]
 
   mov dil, [rsp + 8]
-  call fbpixelcomponent
+  call fb_pixel_component
 
-  mov rax, [framebufferEnd]
+  mov rax, [framebuffer_end]
   mov BYTE [rax], `\n`
-  inc QWORD [framebufferEnd]
+  inc QWORD [framebuffer_end]
 
   add rsp, 1 * 16
   ret
 
 ;; writes a byte to the framebuffer
 ;; dil = byte to write
-fbpixelcomponent:
+fb_pixel_component:
   ; special case: dil = 0
   test dil, dil
-  jnz .notZero
+  jnz .not_zero
 
-  mov rax, [framebufferEnd]
+  mov rax, [framebuffer_end]
   mov BYTE [rax], '0'
-  inc QWORD [framebufferEnd]
+  inc QWORD [framebuffer_end]
   ret
 
-.notZero:
+.not_zero:
 
   ; while al != 0
   mov al, dil ; al = number to write
@@ -119,7 +118,7 @@ fbpixelcomponent:
   mov r10b, 10 ; r10 = const 10
 .loop:
   test al, al
-  jz .endLoop
+  jz .end_loop
 
   dec rsi ; move one character further into red zone
   movzx ax, al
@@ -130,28 +129,28 @@ fbpixelcomponent:
   mov [rsi], dl
 
   jmp .loop
-.endLoop:
+.end_loop:
 
   ; mov rsi, rsi ; start from write buffer
-  mov rdi, [framebufferEnd] ; to framebuffer
+  mov rdi, [framebuffer_end] ; to framebuffer
   mov rcx, rsp ; length = buffer end - current
   sub rcx, rsi
-  add [framebufferEnd], rcx
+  add [framebuffer_end], rcx
   rep movsb ; copy into framebuffer
 
   ret
 
 section .bss
 
-framebuffer: resb framebufferHeaderEnd - framebufferHeader + 1920 * 1080 * 3 * 4
-framebufferEnd: resq 1
+framebuffer: resb framebuffer_header.end - framebuffer_header + 1920 * 1080 * 3 * 4
+framebuffer_end: resq 1
 
 section .rodata
 
-framebufferHeader: db `P3\n1920 1080\n255\n`
-framebufferHeaderEnd:
-convertToByte: dq float64(255.99999)
+framebuffer_header: db `P3\n1920 1080\n255\n`
+.end:
+convert_to_byte: dq float64(255.99999)
 
 section .data
 
-framename: db `frame000.ppm\0`
+frame_name: db `frame000.ppm\0`
