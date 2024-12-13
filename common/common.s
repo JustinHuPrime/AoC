@@ -39,6 +39,12 @@ exit:
   ; movzx rdi, dil ; truncated anyways
   syscall
 
+;; rdi = exit data
+;; never returns
+global abort:function
+abort:
+  ud1 rdi, rdi
+
 ;; rdi = start of string
 ;; rsi = end of string
 ;; returns integer value of string
