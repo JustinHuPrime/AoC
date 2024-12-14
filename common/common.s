@@ -671,6 +671,45 @@ findnotnum:
 
   ret
 
+;; dil = character to query
+;; returns 0/1
+global issnum:function
+issnum:
+  mov al, 1
+  cmp dil, '-'
+  je .end
+  mov al, 0
+  cmp dil, '0'
+  jl .end
+  cmp dil, '9'
+  jg .end
+  mov al, 1
+.end:
+  ret
+
+;; rdi = start of string
+;; returns pointer to found character
+;; clobbers rdi, rsi
+global findnotsnum:function
+findnotsnum:
+  mov rsi, rdi
+
+  ; while !isnum(*rax)
+.loop:
+  mov dil, [rsi]
+  call issnum
+  test al, al
+  jz .end
+
+  inc rsi ; ++rax
+
+  jmp .loop
+.end:
+
+  mov rax, rsi
+
+  ret
+
 ;; rdi = first number (unsigned)
 ;; rsi = second number (unsigned)
 ;; computes LCM
