@@ -180,6 +180,49 @@ putlong:
 
   ret
 
+;; rdi = unsigned long to write
+;; rsi = fd to write to
+;; returns void
+global fputlong:function
+fputlong:
+  ; special case: rdi = 0
+  test rdi, rdi
+  jnz .continue
+
+  lea rdi, [rsp - 1]
+  mov BYTE [rdi], '0'
+  jmp .end
+
+.continue:
+  mov rax, rdi ; rax = number to write
+  mov rdi, rsp ; rdi = start of string (in red zone)
+  mov rcx, 10 ; rcx = const 10
+  ; while rax != 0
+.loop:
+  test rax, rax
+  jz .end
+
+  dec rdi ; move one character further into red zone
+  
+  mov rdx, 0
+  div rcx ; rax = quotient, rdx = remainder
+  add dl, '0' ; dl = converted remainder
+
+  mov [rdi], dl
+
+  jmp .loop
+.end:
+
+  mov rax, rdi ; save rdi
+  mov rdi, rsi ; to fd
+  mov rsi, rax ; start from write buffer
+  mov rdx, rsp ; length = buffer end - current
+  sub rdx, rsi
+  mov rax, 1 ; write
+  syscall
+
+  ret
+
 ;; rdi = signed long to write
 ;; returns void
 global putslong:function

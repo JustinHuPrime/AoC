@@ -23,3 +23,7 @@ run-%b: %b %.txt
 
 %.txt:
 	curl -s --cookie $(shell cat ../TOKEN) --user-agent "Justin Hu <justin.hu@alumni.ubc.ca> via curl" https://adventofcode.com/2024/day/$*/input > $@
+
+17a-cross: 17a 17.txt
+	./17a 17.txt > 17a-cross
+	chmod +x 17a-cross
