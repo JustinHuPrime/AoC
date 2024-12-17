@@ -9,10 +9,10 @@ _start:
   mov attempt, 0
 
 .tryLoop:
-  mov rdi, attempt
-  call putlong
-  call newline
-  
+  ; mov rdi, attempt
+  ; call putlong
+  ; call newline
+
   mov rdi, attempt
   call run
 
