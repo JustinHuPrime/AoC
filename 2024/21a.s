@@ -114,9 +114,9 @@ constructSequence:
   ; taken from https://github.com/AllanTaylor314/AdventOfCode/blob/main/2024/21.py#L46
 
   ; are we going up and are we able to go up first?
-  test r9, r9
+  test r8, r8
   jng .notException
-  cmp BYTE [r14 + r9], 0
+  cmp BYTE [r14 + 8 * r8], 0
   je .notException
   jmp .verticalFirst
 .notException:
