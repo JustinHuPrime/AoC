@@ -832,6 +832,44 @@ streq:
   mov al, 0
   ret
 
+;; rdi = number to format
+;; rsi = pointer to start of buffer, at least 20 characters long
+;; returns rax = pointer to start of number, rdx = pointer to one-past-end of number
+global sputlong:function
+sputlong:
+  ; special case: rdi = 0
+  test rdi, rdi
+  jnz .continue
+
+  mov rax, rsi
+  mov BYTE [rax], '0'
+  lea rdi, [rsi + 1]
+  ret
+
+.continue:
+
+  add rsi, 20
+  mov rcx, rsi ; rcx = end of buffer
+
+  mov rax, rdi ; rax = number to write
+  mov rdi, 10 ; rdi = const 10
+  ; do-while rax != 0
+.loop:
+
+  dec rsi ; prepare to write a character
+  mov rdx, 0
+  div rdi ; rax = quotient, rdx = remainder
+  add dl, '0' ; dl = converted remainder
+
+  mov [rsi], dl
+
+  test rax, rax
+  jnz .loop
+
+  mov rax, rsi ; rax = start of string
+  mov rdx, rcx ; rdx = end of buffer
+  ret
+
 section .bss
 
 statbuf: resb 144
