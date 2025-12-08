@@ -502,7 +502,7 @@ qsortby:
   ; x, x ... x, x, x ...
   ; ^  ^     ^
   ; |  |     + rsi = current element
-  ; |  + rdi + 8 = greater than pivot
+  ; |  + rdi + 8 = greater than or equal to pivot
   ; + rdi = spot for pivot; value undefined
   mov rcx, [rdi]
   mov rsi, rdi ; rsi = current element
@@ -554,6 +554,133 @@ qsortby:
   call qsortby
 
   add rsp, 3*8
+
+.end:
+  ret
+
+;; rdi = start of range to sort
+;; rsi = end of range to sort
+;; rdx = function pointer to comparison function
+;; rcx = size of elements
+global qsortby_T:function
+qsortby_T:
+  ; if range is empty, return
+  cmp rdi, rsi
+  je .end
+
+  sub rsp, 3 * 8
+  sub rsp, rcx
+  ;; slots:
+  ;; rsp + 3 * 8 = spot for pivot
+  ;; rsp + 2 * 8 = pivot position
+  ;; rsp + 1 * 8 = start of range
+  ;; rsp + 0 * 8 = end of range
+
+  mov [rsp + 0 * 8], rsi
+  mov [rsp + 1 * 8], rdi
+
+  ; for each element in the range (at least one)
+  ; invariant: rdi = pivot address
+  ; invariant: array looks like:
+  ; x, x ... x, x, x ...
+  ; ^  ^     ^
+  ; |  |     + rsi = current element
+  ; |  + rdi + rcx = greater or equal to pivot
+  ; + rdi = spot for pivot; value undefined
+  ; save pivot
+  push rsi
+  push rdi
+  push rcx
+
+  mov rsi, rdi
+  lea rdi, [rsp + 3 * 8 + 3 * 8]
+  rep movsb
+
+  pop rcx
+  pop rdi
+  pop rsi
+
+  mov rsi, rdi ; rsi = current element
+  ; do while rsi < end
+.loop:
+
+  ; save registers and call comparison function
+  push rdi
+  push rsi
+  push rcx
+  push rdx
+
+  mov rdi, rsi
+  lea rsi, [rsp + 3 * 8 + 4 * 8]
+  call rdx
+
+  pop rdx
+  pop rcx
+  pop rsi
+  pop rdi
+
+  cmp rax, 0
+  jge .continue ; this >= pivot and after pivot -> do nothing
+
+  ; insert current element at current pivot location
+  push rsi
+  push rdi
+  push rcx
+
+  rep movsb
+
+  pop rcx
+  pop rdi
+  pop rsi
+
+  ; move greater than pivot to current position
+  push rsi
+  push rdi
+  push rcx
+
+  lea rax, [rdi + rcx]
+  mov rdi, rsi
+  mov rsi, rax
+  rep movsb
+
+  pop rcx
+  pop rdi
+  pop rsi
+
+  add rdi, rcx ; move pivot position
+
+.continue:
+  add rsi, rcx
+
+  cmp rsi, [rsp + 0]
+  jb .loop
+
+  ; re-insert pivot
+  push rdi
+  push rsi
+  push rcx
+
+  lea rsi, [rsp + 3 * 8 + 3 * 8]
+  rep movsb
+
+  pop rcx
+  pop rsi
+  pop rdi
+
+  ; save pivot position
+  mov [rsp + 2 * 8], rdi
+
+  mov rdi, [rsp + 1 * 8] ; rdi = start of range
+  mov rsi, [rsp + 2 * 8] ; rsi = pivot position
+  call qsortby_T
+
+  mov rdi, [rsp + 2 * 8] ; rdi = one more than pivot position
+  add rdi, rcx
+  mov rsi, [rsp + 0] ; rsi = end of range
+  call qsortby_T
+
+  add rsp, 3 * 8
+  add rsp, rcx
 
 .end:
   ret
