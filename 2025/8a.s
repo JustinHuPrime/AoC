@@ -74,7 +74,7 @@ _start:
   ; parse input into array of boxes
   mov rbx, boxes ; rbx = current box
   mov rbp, circuits ; rbp = current circuit
-.readLoop:2025/8a.s
+.readLoop:
 
   ; parse first number
   mov rdi, currChar
