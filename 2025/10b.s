@@ -7,8 +7,12 @@ section .text
 %define accumulator [rsp + 8]
 %define goal ymm0
 %define buttons [rsp + 16]
+%define children r15
+%define currChild rbx
 %define todoHead r15
 %define todoTail rbx
+
+%define numCores 24
 
 ;; struct TodoListEntry {
 ;;   currPresses: u64
@@ -36,8 +40,23 @@ _start:
   add rdx, rax
   mov endOfFile, rdx
 
-  mov rax, 0
+  mov rax, 9 ; mmap
+  mov rdi, 0 ; allocate a new address
+  mov rsi, 0x1000 ; 1 page
+  mov rdx, 3 ; prot = PROT_READ | PROT_WRITE
+  mov r10, 33 ; flags = MAP_SHARED | MAP_ANONYMOUS
+  mov r8, -1 ; no file backing
+  mov r9, 0 ; no offset
+  syscall
   mov accumulator, rax
+
+  ; allocate children array
+  mov rdi, numCores
+  shl rdi, 3
+  call alloc
+  mov children, rax
+
+  mov currChild, 0
 .loop:
 
   ; skip lights
@@ -107,8 +126,72 @@ _start:
 
   vmovdqu goal, [rsp + 24]
 
+  mov rax, 57 ; fork
+  syscall
+  test rax, rax
+  jz solve ; if this is the child, go solve
+  mov [children + 8 * currChild], rax ; if not, record the child
+
+  inc currChild
+
+  cmp currChild, numCores
+  jb .noWait
+
+  ; wait for all numCores children
+  mov currChild, 0
+.waitLoop:
+
+  mov rax, 61 ; wait4
+  mov rdi, [children + 8 * currChild] ; the child
+  mov rsi, 0 ; no stats
+  mov rdx, 0 ; default options
+  mov r10, 0 ; no resource usage
+  syscall
+
+  inc currChild
+
+  cmp currChild, numCores
+  jb .waitLoop
+
+  ; clear children
+  mov currChild, 0
+  mov rdi, children
+  mov rcx, numCores
+  mov rax, 0
+  rep stosq
+
+.noWait:
+  inc currChar
+
+  cmp currChar, endOfFile
+  jb .loop
+
+  ; wait for all remaining children
+  mov currChild, 0
+.finalWaitLoop:
+
+  mov rax, 61 ; wait4
+  mov rdi, [children + 8 * currChild] ; the child
+  mov rsi, 0 ; no stats
+  mov rdx, 0 ; default options
+  mov r10, 0 ; no resource usage
+  syscall
+
+  inc currChild
+
+  cmp QWORD [children + 8 * currChild], 0
+  jnz .finalWaitLoop
+
+  mov rdi, accumulator
+  mov rdi, [rdi]
+  call putlong
+  call newline
+
+  mov dil, 0
+  call exit
+
+solve:
   ; do breadth-first traversal through search space
-.breakpoint:
   mov rdi, sizeofTodoListEntry
   call alloc
   mov todoHead, rax
@@ -152,16 +235,8 @@ _start:
 
   ; add presses needed to accumulator
   mov rax, [todoHead + offsetofTodoListEntryCurrPresses]
-  add accumulator, rax
-
-  inc currChar
-
-  cmp currChar, endOfFile
-  jb .loop
-
   mov rdi, accumulator
-  call putlong
-  call newline
+  lock add [rdi], rax
 
   mov dil, 0
   call exit
