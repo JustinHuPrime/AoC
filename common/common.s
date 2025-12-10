@@ -786,6 +786,8 @@ alloc:
   mov rdi, 0 ; impossible value
   syscall
 
+  mov [nextalloc], rax
+
   jmp .gotbrk
 
 .havebrk:
@@ -794,15 +796,30 @@ alloc:
 
 .gotbrk:
 
-  ; actually allocate
-  lea rdi, [rax + rsi] ; rdi = old brk + length to allocate
-  mov rsi, rax ; rsi = old brk
+  ; check - can we allocate without moving the brk point
+  mov rdi, rax
+  sub rdi, [nextalloc]
+  cmp rdi, rsi
+  jae .end
+  
+  ; actually allocate in 256 MiB pages
+  mov rdi, rsi
+  test rdi, 0xfffffff
+  jz .noallocpad
+
+  and rdi, ~0xfffffff
+  add rdi, 0x10000000
+
+.noallocpad:
+  add rdi, rax ; rdi = old brk + length to allocate
   mov rax, 12 ; brk
   syscall
 
   mov [oldbrk], rax ; save new brk
 
-  mov rax, rsi ; return rsi (old brk)
+.end:
+  mov rax, [nextalloc] ; return nextalloc
+  add [nextalloc], rsi ; consume space
   ret
 
 ;; dil = character to query
@@ -1001,3 +1018,5 @@ section .bss
 
 statbuf: resb 144
 oldbrk: resq 1
+nextalloc: resq 1
+freelist: resq 1
